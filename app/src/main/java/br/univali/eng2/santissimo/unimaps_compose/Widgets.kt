@@ -34,12 +34,40 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 class Widgets {
 
 	companion object {
+
+		@JvmStatic
+		@Composable
+		fun CommentCard(comment: Service.CommentControl.Comment, onClick: () -> Unit = {}) {
+			OutlinedCard(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(8.dp)
+					.height(120.dp),
+//					.clickable(onClick = onClick),
+				colors = CardDefaults.cardColors(
+					containerColor = MaterialTheme.colorScheme.onPrimary
+				),
+				border = BorderStroke(1.dp, Color.Black),
+				elevation = CardDefaults.cardElevation(
+					defaultElevation = 6.dp
+				)
+			)
+			{
+				Text(
+					text = comment.body,
+					modifier = Modifier
+						.padding(16.dp),
+					overflow = TextOverflow.Ellipsis
+				)
+			}
+		}
 
 		@JvmStatic
 		@Composable

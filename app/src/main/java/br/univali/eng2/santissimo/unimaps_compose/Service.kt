@@ -1,5 +1,6 @@
 package br.univali.eng2.santissimo.unimaps_compose
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
@@ -21,7 +22,7 @@ object ServiceControl {
 					location     = "C2",
 					complement   = "110",
 					openTime     = LocalTime.of(1, 0),
-					closedTime   = LocalTime.of(Random.nextInt(8, 23), 30),
+					closedTime   = LocalTime.of(Random.nextInt(17, 23), 30),
 					peakTime     = LocalTime.of(12, 15),
 					catergory    = Service.ServiceCatergory.Food,
 					type         = Service.ServiceType.Pizzaplace,
@@ -59,6 +60,13 @@ class Service(
 	val rating: Int,
 	val commentCount: Int
 ) {
+
+	class CommentControl(val parent: Service) {
+		class Comment(val body: String)
+		val comments = mutableStateListOf<Comment>()
+	}
+
+	var comments = CommentControl(this)
 
 	enum class ServiceStatus
 	{

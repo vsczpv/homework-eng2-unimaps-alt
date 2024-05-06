@@ -1,5 +1,6 @@
 package br.univali.eng2.santissimo.unimaps_compose
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -277,7 +278,9 @@ fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = Servi
 
 						OutlinedButton(
 							onClick = {
-								Toast.makeText(atv.baseContext, "TBI", Toast.LENGTH_SHORT).show()
+								val navi = Intent(atv.baseContext, CommentActivity::class.java)
+								navi.putExtra("service", service.id)
+								atv.startActivity(navi)
 							},
 							modifier = Modifier
 								.padding(top = 16.dp)

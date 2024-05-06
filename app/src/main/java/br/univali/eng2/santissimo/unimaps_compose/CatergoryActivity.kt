@@ -93,16 +93,6 @@ fun CatergoryUI(atv: CatergoryActivity? = CatergoryActivity(), catergory_name: S
 							}
 						}
 					}
-					/*
-					items(CatergoryControl.getCatergoryCount()) {
-						Widgets.ServiceCardButton(service = CatergoryControl.getCatergories()[it]) {
-							val navi = Intent(atv!!.baseContext, ServiceActivity::class.java)
-							navi.putExtra("service", CatergoryControl.getCatergories()[it].id)
-							atv.startActivity(navi)
-						}
-					}
-
-					 */
 				}
 			}
 		}
