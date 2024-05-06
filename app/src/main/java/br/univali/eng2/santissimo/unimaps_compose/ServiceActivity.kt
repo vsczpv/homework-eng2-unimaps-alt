@@ -4,13 +4,19 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -26,12 +32,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
 
 class ServiceActivity : ComponentActivity() {
@@ -73,119 +85,175 @@ fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = Servi
 			modifier = Modifier.fillMaxSize(),
 			color = MaterialTheme.colorScheme.background
 		) {
-			Scaffold (
-				modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-				topBar = {
-					LargeTopAppBar(
-						colors = TopAppBarDefaults.topAppBarColors(
-							containerColor    = MaterialTheme.colorScheme.primaryContainer,
-							titleContentColor = MaterialTheme.colorScheme.onPrimary
-						),
-						title = {
-							Text(
-								service.name,
-								maxLines = 1,
-								overflow = TextOverflow.Ellipsis
-							)
-						},
-						navigationIcon = {
-							IconButton(onClick = {
-								atv.finish()
-							}) {
-								Icon(
-									imageVector        = Icons.Filled.ArrowBack,
-									contentDescription = null
-								)
-							}
-						},
-						scrollBehavior = scrollBehavior
-					)
-				}
-			) {paddingValues ->
-				Column (
+			Box {
+				Image(
+					painter = painterResource(R.drawable.mate_defbanner),
+					contentDescription = null
+				)
+				Scaffold(
+					containerColor = Color.Transparent,
 					modifier = Modifier
-						.padding(paddingValues)
-						.padding(horizontal = 16.dp)
-						.padding(top = 16.dp)
-				) {
-					val entries = listOf(
-						Pair("Categoria", serviceCatergoryName(service.catergory)),
-						Pair("Tipo", serviceTypeToName(service.type)),
-						Pair("Horário", serviceItineraryToString(service))
-					)
-					Widgets.ServiceInfoList(entries)
-					Row (
-						horizontalArrangement = Arrangement.SpaceBetween,
-						modifier = Modifier
-							.fillMaxWidth()
-							.padding(end = 4.dp)
-					) {
-						Widgets.ServiceInfoBit(
-							label = "Pico",
-							info = service.peakTime.toString()
-						)
-						Widgets.ServiceInfoBit(
-							label = "Capacidade",
-							info = service.capacity.toString()
-						)
+						.nestedScroll(scrollBehavior.nestedScrollConnection),
+					topBar = {
+						LargeTopAppBar(
+							colors = TopAppBarDefaults.topAppBarColors(
+								containerColor = Color.Transparent,
+								titleContentColor = MaterialTheme.colorScheme.onPrimary
+							),
+							title = {
+								Text(
+									service.name,
+									maxLines = 1,
+									overflow = TextOverflow.Ellipsis,
+									style = MaterialTheme.typography.headlineLarge.copy(
+										shadow = Shadow(
+											color = Color.Black,
+											blurRadius = 16f
+										),
+									),
+								)
+							},
+							navigationIcon = {
+								IconButton(onClick = {
+									atv.finish()
+								}) {
+									Icon(
+										imageVector = Icons.Filled.ArrowBack,
+										tint = Color.White,
+										modifier = Modifier
+											.background(MaterialTheme.colorScheme.primary, CircleShape)
+											.padding(8.dp),
+										contentDescription = null
+									)
+								}
+							},
+							scrollBehavior = scrollBehavior,
+							modifier = Modifier
+								.background(
+									brush = Brush.verticalGradient(
+										0.0f to Color(0x00000000),
+										1.0f to Color.Black.copy(alpha = 0.8f)
+									)
+								)
+							)
 					}
-
-					OutlinedButton(
-						onClick = { Toast.makeText(atv.baseContext,"TBI", Toast.LENGTH_SHORT).show() },
+				) { paddingValues ->
+					Column(
 						modifier = Modifier
-							.padding(top = 16.dp)
+							.padding(paddingValues)
+							.background(Color.White)
+							.padding(horizontal = 16.dp)
+							.padding(top = 16.dp),
 					) {
-						Text(
-							text = "Catálogo",
-							style = MaterialTheme.typography.titleLarge,
-							color = Color.Black,
+						val entries = listOf(
+							Pair("Categoria", serviceCatergoryName(service.catergory)),
+							Pair("Tipo", serviceTypeToName(service.type)),
+							Pair("Horário", serviceItineraryToString(service))
+						)
+						Widgets.ServiceInfoList(entries)
+						Row(
+							horizontalArrangement = Arrangement.SpaceBetween,
 							modifier = Modifier
+								.fillMaxWidth()
 								.padding(end = 4.dp)
-						)
-						Icon(
-							imageVector = Icons.Filled.KeyboardArrowRight,
-							contentDescription = null,
-							tint = Color.Black,
+						) {
+							Widgets.ServiceInfoBit(
+								label = "Pico",
+								info = service.peakTime.toString()
+							)
+							Widgets.ServiceInfoBit(
+								label = "Capacidade",
+								info = service.capacity.toString()
+							)
+						}
+
+						OutlinedButton(
+							onClick = {
+								Toast.makeText(atv.baseContext, "TBI", Toast.LENGTH_SHORT).show()
+							},
 							modifier = Modifier
-								.size(24.dp)
-						)
-					}
+								.padding(top = 16.dp)
+						) {
+							Text(
+								text = "Catálogo",
+								style = MaterialTheme.typography.titleLarge,
+								color = Color.Black,
+								modifier = Modifier
+									.padding(end = 4.dp)
+							)
+							Icon(
+								imageVector = Icons.Filled.KeyboardArrowRight,
+								contentDescription = null,
+								tint = Color.Black,
+								modifier = Modifier
+									.size(24.dp)
+							)
+						}
 
-					Text(
-						text = "Local:",
-						style = MaterialTheme.typography.titleLarge,
-						modifier = Modifier
-							.padding(top = 16.dp, start = 8.dp)
-					)
+						Row(
+							modifier = Modifier
+								.padding(top = 16.dp),
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							/* Não existe RatingBar para Compose */
+							AndroidView(
+								modifier = Modifier
+									.width(240.dp)
+									.scale(0.8f)
+									.offset(x = -24.dp),
+								factory = { context ->
+									android.widget.RatingBar(context).apply {
+										this.numStars = 5
+										this.rating = (service.rating.toFloat() / 10f) * 5f
+										this.setIsIndicator(true)
+									}
+								}
+							)
+							Text(
+								text = "${service.commentCount} Avaliações",
+								modifier = Modifier
+									.offset(y = -2.dp),
+							)
+						}
 
-					Text(
-						text = "${service.location}: Próximo à sala ${service.complement}.",
-						style = MaterialTheme.typography.titleMedium,
-						modifier = Modifier
-							.padding(start = 8.dp)
-					)
-
-					Widgets.MapCardButton(background = R.drawable.map_placeholder)
-
-					OutlinedButton(
-						onClick = { Toast.makeText(atv.baseContext,"TBI", Toast.LENGTH_SHORT).show() },
-						modifier = Modifier
-							.padding(top = 16.dp)
-					) {
 						Text(
-							text = "Comentários",
+							text = "Local:",
 							style = MaterialTheme.typography.titleLarge,
-							color = Color.Black,
 							modifier = Modifier
-								.padding(end = 4.dp)
+								.padding(top = 16.dp, start = 8.dp)
 						)
-						Icon(
-							imageVector = Icons.Filled.KeyboardArrowRight,
-							contentDescription = null,
-							tint = Color.Black,
+
+						Text(
+							text = "${service.location}: Próximo à sala ${service.complement}.",
+							style = MaterialTheme.typography.titleMedium,
 							modifier = Modifier
-								.size(24.dp)
+								.padding(start = 8.dp)
 						)
+
+						Widgets.MapCardButton(background = R.drawable.map_placeholder)
+
+						OutlinedButton(
+							onClick = {
+								Toast.makeText(atv.baseContext, "TBI", Toast.LENGTH_SHORT).show()
+							},
+							modifier = Modifier
+								.padding(top = 16.dp)
+						) {
+							Text(
+								text = "Comentários",
+								style = MaterialTheme.typography.titleLarge,
+								color = Color.Black,
+								modifier = Modifier
+									.padding(end = 4.dp)
+							)
+							Icon(
+								imageVector = Icons.Filled.KeyboardArrowRight,
+								contentDescription = null,
+								tint = Color.Black,
+								modifier = Modifier
+									.size(24.dp)
+							)
+						}
 					}
 				}
 			}

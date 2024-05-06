@@ -7,17 +7,18 @@ object ServiceControl {
 	// TODO
 	fun fetchServiceById(id: Int): Service {
 		return Service(
-			id         = id,
-			name       = "Tentação do Mate",
-			location   = "C2",
-			complement = "110",
-			openTime   = LocalTime.of(17, 0),
-			closedTime = LocalTime.of(min(17 + id, 23), 30),
-			peakTime   = LocalTime.of(23, 15),
-			catergory  = Service.ServiceCatergory.Food,
-			type       = Service.ServiceType.Pizzaplace,
-			capacity   = 20,
-			rating     = 8
+			id           = id,
+			name         = "Tentação do Mate",
+			location     = "C2",
+			complement   = "110",
+			openTime     = LocalTime.of(17, 0),
+			closedTime   = LocalTime.of(min(17 + id, 23), 30),
+			peakTime     = LocalTime.of(23, 15),
+			catergory    = Service.ServiceCatergory.Food,
+			type         = Service.ServiceType.Pizzaplace,
+			capacity     = 20,
+			rating       = 9,
+			commentCount = 12
 		)
 	}
 }
@@ -39,7 +40,8 @@ class Service(
 	val catergory: ServiceCatergory,
 	val type: ServiceType,
 	val capacity: Int,
-	val rating: Int
+	val rating: Int,
+	val commentCount: Int
 ) {
 
 	enum class ServiceStatus
