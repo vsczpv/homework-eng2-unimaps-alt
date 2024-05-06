@@ -2,12 +2,14 @@ package br.univali.eng2.santissimo.unimaps_compose
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -15,14 +17,41 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
 import androidx.compose.ui.unit.dp
 
+object FavoriteControl {
+
+	val favorites = mutableStateMapOf<Int, Service>()
+	fun addFavorite(service: Service)  = favorites.put(service.id, service)
+
+}
+
+object RecentsControl {
+
+	val recents = mutableStateListOf<Service>()
+	fun addRecent(service: Service) {
+		if (recents.find { it.id == service.id } == null) {
+			recents.add(service)
+			if (recents.count() > 4) {
+				recents.removeRange(0, 1)
+			}
+		}
+	}
+
+}
+
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+
+	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             MainUI(this)
@@ -32,7 +61,11 @@ class MainActivity : ComponentActivity() {
 
 @Preview(showBackground = true)
 @Composable
-fun MainUI(atv: MainActivity? = null) {
+fun MainUI(atv: MainActivity? = MainActivity()) {
+
+	val favorites = remember { FavoriteControl.favorites }
+	val recents   = remember { RecentsControl.recents }
+
     UNIMAPSComposeTheme {
         // A surface container using the 'background' color from the theme
         Surface(
@@ -43,7 +76,7 @@ fun MainUI(atv: MainActivity? = null) {
             LazyColumn (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-					.fillMaxWidth()
+	                .fillMaxWidth()
 	                .padding(8.dp)
             ) {
 				item {
@@ -56,28 +89,103 @@ fun MainUI(atv: MainActivity? = null) {
 						)
 	                    Widgets.MapCardButton(
 							background = R.drawable.map_placeholder,
-		                )
+		                ) {
+							val id = favorites.size+1
+							FavoriteControl.addFavorite(CatergoryControl.getServices()[id])
+		                    Toast.makeText(atv!!.baseContext, "!!! $id", Toast.LENGTH_SHORT).show()
+	                    }
 					}
 				}
-	            items (2) {
-		            Column {
+	            /* Favoritos */
+	            item {
+					Column (
+						modifier = Modifier
+							.height(180.dp)
+					){
 						Text(
-							text = if (it == 0) "Favoritos" else "Recentes",
+							text = "Favoritos",
 							style = MaterialTheme.typography.titleLarge,
 							modifier = Modifier
 								.padding(16.dp)
+								.fillMaxWidth()
 						)
-		                LazyRow (
-		                    horizontalArrangement = Arrangement.Start,
-		                    modifier = Modifier
-		                        .fillMaxWidth()
-		                ) {
-							items (5) {
-								Widgets.MugshotButton(
-									imageId = R.drawable.ic_launcher_background
-								)
+						if (favorites.size == 0) {
+							Text(
+								text = "Você não tem nenhum favorito",
+								color = Color.Gray,
+								modifier = Modifier
+									.padding(top = 34.dp)
+									.fillMaxWidth(),
+								textAlign = TextAlign.Center
+							)
+						}
+						else LazyRow(
+							horizontalArrangement = Arrangement.Start,
+							modifier = Modifier
+								.fillMaxWidth()
+						) {
+							for (fav in favorites) {
+								item {
+									Widgets.MugshotButton(
+										imageId = R.drawable.mate_deficon,
+										if (fav.value.status == Service.ServiceStatus.Open)
+											Color.Green
+										else
+											Color.Red,
+									) {
+										val navi = Intent(atv!!.baseContext, ServiceActivity::class.java)
+										navi.putExtra("service", fav.value.id)
+										atv.startActivity(navi)
+									}
+								}
 							}
-		                }
+						}
+					}
+	            }
+	            /* Recentes */
+	            item {
+		            Column (
+			            modifier = Modifier
+				            .height(180.dp)
+		            ){
+			            Text(
+				            text = "Recentes",
+				            style = MaterialTheme.typography.titleLarge,
+				            modifier = Modifier
+					            .padding(16.dp)
+					            .fillMaxWidth()
+			            )
+			            if (recents.size == 0) {
+				            Text(
+					            text = "Você ainda não visualisou nenhum serviço",
+					            color = Color.Gray,
+					            modifier = Modifier
+						            .padding(top = 34.dp)
+						            .fillMaxWidth(),
+					            textAlign = TextAlign.Center
+				            )
+			            }
+			            else LazyRow(
+				            horizontalArrangement = Arrangement.Start,
+				            modifier = Modifier
+					            .fillMaxWidth()
+			            ) {
+				            for (rct in recents) {
+					            item {
+						            Widgets.MugshotButton(
+							            imageId = R.drawable.mate_deficon,
+							            if (rct.status == Service.ServiceStatus.Open)
+								            Color.Green
+							            else
+								            Color.Red,
+						            ) {
+							            val navi = Intent(atv!!.baseContext, ServiceActivity::class.java)
+							            navi.putExtra("service", rct.id)
+							            atv.startActivity(navi)
+						            }
+					            }
+				            }
+			            }
 		            }
 	            }
 	            item {

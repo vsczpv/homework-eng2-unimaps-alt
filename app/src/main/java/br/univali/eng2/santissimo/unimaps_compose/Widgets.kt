@@ -240,7 +240,7 @@ class Widgets {
 
 		@JvmStatic
 		@Composable
-		fun MugshotButton(imageId: Int) {
+		fun MugshotButton(imageId: Int, ringColor: Color, onClick: () -> Unit = {}) {
 			Image(
 				painter = painterResource(imageId),
 				contentDescription = "Mugshot",
@@ -248,8 +248,8 @@ class Widgets {
 					.size(94.dp)
 					.padding(8.dp)
 					.clip(CircleShape)
-					.border(BorderStroke(4.dp, Color.Green), CircleShape)
-					.clickable {}
+					.border(BorderStroke(4.dp, ringColor), CircleShape)
+					.clickable(onClick = onClick)
 			)
 		}
 

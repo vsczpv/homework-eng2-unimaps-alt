@@ -23,22 +23,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
 
-class CatergoryControl() {
+object CatergoryControl {
 
 	private val catergories: MutableList<Service> = ArrayList()
 
 	init {
 		for (i in 1..8) {
-			catergories.add(ServiceControl.fetchServiceById(i))
+			catergories.add(ServiceControl.fetchServiceById(i)!!)
 		}
 	}
-	fun getCatergories(): List<Service> = catergories
-	fun getCatergoryCount() = catergories.size
+	fun getServices(): List<Service> = catergories
+	fun getServiceCount() = catergories.size
 }
 
 class CatergoryActivity : ComponentActivity() {
-
-	var catergoryControl = CatergoryControl()
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
@@ -86,13 +84,25 @@ fun CatergoryUI(atv: CatergoryActivity? = CatergoryActivity(), catergory_name: S
 				LazyColumn (
 					modifier = Modifier.padding(innerPadding)
 				) {
-					items(atv!!.catergoryControl.getCatergoryCount()) {
-						Widgets.ServiceCardButton(service = atv.catergoryControl.getCatergories()[it]) {
-							val navi = Intent(atv.baseContext, ServiceActivity::class.java)
-							navi.putExtra("service", atv.catergoryControl.getCatergories()[it].id)
+					for (srv in CatergoryControl.getServices()) {
+						item {
+							Widgets.ServiceCardButton(service = srv) {
+								val navi = Intent(atv!!.baseContext, ServiceActivity::class.java)
+								navi.putExtra("service", srv.id)
+								atv.startActivity(navi)
+							}
+						}
+					}
+					/*
+					items(CatergoryControl.getCatergoryCount()) {
+						Widgets.ServiceCardButton(service = CatergoryControl.getCatergories()[it]) {
+							val navi = Intent(atv!!.baseContext, ServiceActivity::class.java)
+							navi.putExtra("service", CatergoryControl.getCatergories()[it].id)
 							atv.startActivity(navi)
 						}
 					}
+
+					 */
 				}
 			}
 		}

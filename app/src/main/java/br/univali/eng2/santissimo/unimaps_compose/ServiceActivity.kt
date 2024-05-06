@@ -19,7 +19,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.AccountBox
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +40,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -50,7 +61,7 @@ class ServiceActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		val serviceId = intent.extras!!.getInt("service")
-		val service   = ServiceControl.fetchServiceById(serviceId)
+		val service   = ServiceControl.fetchServiceById(serviceId)!!
 		setContent {
 			ServiceUI(this, service)
 		}
@@ -77,8 +88,16 @@ fun serviceItineraryToString(service: Service): String {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = ServiceControl.fetchServiceById(0)) {
+fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = ServiceControl.fetchServiceById(0)!!) {
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+	val favorites = remember { FavoriteControl.favorites }
+	val hasBeenVisited = remember { mutableStateOf(false) }
+
+	if (!hasBeenVisited.value) {
+		RecentsControl.addRecent(service)
+		hasBeenVisited.value = true
+	}
+
 	UNIMAPSComposeTheme {
 		// A surface container using the 'background' color from the theme
 		Surface(
@@ -119,6 +138,30 @@ fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = Servi
 								}) {
 									Icon(
 										imageVector = Icons.Filled.ArrowBack,
+										tint = Color.White,
+										modifier = Modifier
+											.background(MaterialTheme.colorScheme.primary, CircleShape)
+											.padding(8.dp),
+										contentDescription = null
+									)
+								}
+							},
+							actions = {
+								IconButton(onClick = {
+									if (favorites[service.id] != null) {
+										favorites.remove(service.id)
+										Toast.makeText(atv.baseContext, "Desfavoritado!", Toast.LENGTH_SHORT).show()
+									}
+									else {
+										FavoriteControl.addFavorite(service)
+										Toast.makeText(atv.baseContext, "Favoritado!", Toast.LENGTH_SHORT).show()
+									}
+								}) {
+									Icon(
+										imageVector = if (favorites.containsKey(service.id))
+											Icons.Filled.Favorite
+										else
+											Icons.Filled.FavoriteBorder,
 										tint = Color.White,
 										modifier = Modifier
 											.background(MaterialTheme.colorScheme.primary, CircleShape)

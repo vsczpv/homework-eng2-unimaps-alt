@@ -1,25 +1,41 @@
 package br.univali.eng2.santissimo.unimaps_compose
 
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import java.time.LocalTime
 import kotlin.math.min
+import kotlin.random.Random
 
 object ServiceControl {
+
+	var loadedServices: MutableMap<Int, Service> = HashMap()
+
+	init {
+		for (id in 0..8) {
+			loadedServices.put(id,
+				Service(
+					id           = id,
+					name         = "Tentação do Mate",
+					location     = "C2",
+					complement   = "110",
+					openTime     = LocalTime.of(1, 0),
+					closedTime   = LocalTime.of(Random.nextInt(8, 23), 30),
+					peakTime     = LocalTime.of(12, 15),
+					catergory    = Service.ServiceCatergory.Food,
+					type         = Service.ServiceType.Pizzaplace,
+					capacity     = 20,
+					rating       = 9,
+					commentCount = 12
+				)
+			)
+		}
+	}
+
 	// TODO
-	fun fetchServiceById(id: Int): Service {
-		return Service(
-			id           = id,
-			name         = "Tentação do Mate",
-			location     = "C2",
-			complement   = "110",
-			openTime     = LocalTime.of(17, 0),
-			closedTime   = LocalTime.of(min(17 + id, 23), 30),
-			peakTime     = LocalTime.of(23, 15),
-			catergory    = Service.ServiceCatergory.Food,
-			type         = Service.ServiceType.Pizzaplace,
-			capacity     = 20,
-			rating       = 9,
-			commentCount = 12
-		)
+	fun fetchServiceById(id: Int): Service? {
+		return loadedServices[id]
 	}
 }
 
@@ -33,8 +49,8 @@ class Service(
 	val peakTime: LocalTime,
 	val status: ServiceStatus = if
 	(
-		openTime   >= LocalTime.now() &&
-		closedTime > LocalTime.now()
+		LocalTime.now() >= openTime &&
+		LocalTime.now() <  closedTime
 	)
 	ServiceStatus.Open else ServiceStatus.Closed,
 	val catergory: ServiceCatergory,
