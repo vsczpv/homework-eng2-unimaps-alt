@@ -32,11 +32,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 class Widgets {
 
@@ -189,10 +192,13 @@ class Widgets {
 				)
 			) {
 				Box {
-					Image(
-							painter = painterResource(id = R.drawable.mate_defbanner),
-							contentScale = ContentScale.Fit,
-							contentDescription = null
+					AsyncImage(
+						model = ImageRequest.Builder(LocalContext.current)
+							.data("${Globals.backendAddress}/service/${service.id}/banner.png")
+							.crossfade(true)
+							.build(),
+						contentScale = ContentScale.Fit,
+						contentDescription = null
 					)
 					Column (
 						modifier = Modifier
@@ -268,9 +274,12 @@ class Widgets {
 
 		@JvmStatic
 		@Composable
-		fun MugshotButton(imageId: Int, ringColor: Color, onClick: () -> Unit = {}) {
-			Image(
-				painter = painterResource(imageId),
+		fun MugshotButton(service: Service, ringColor: Color, onClick: () -> Unit = {}) {
+			AsyncImage(
+				model = ImageRequest.Builder(LocalContext.current)
+					.data("${Globals.backendAddress}/service/${service.id}/icon.png")
+					.crossfade(true)
+					.build(),
 				contentDescription = "Mugshot",
 				modifier = Modifier
 					.size(94.dp)

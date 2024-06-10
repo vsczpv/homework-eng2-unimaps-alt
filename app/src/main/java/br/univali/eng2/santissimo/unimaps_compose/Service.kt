@@ -22,7 +22,7 @@ open class RESTLoadTask(val path: String) : AsyncTask<Void, Void, JSONArray>() {
 		}
 	}
 	override fun doInBackground(vararg params: Void?): JSONArray? {
-		val real_path = "http://192.168.1.110:8000" + this.path
+		val real_path = Globals.backendAddress + this.path
 
 		val urlConn:   URLConnection
 		var bufReader: BufferedReader? = null

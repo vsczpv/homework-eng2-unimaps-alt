@@ -1,7 +1,12 @@
 package br.univali.eng2.santissimo.unimaps_compose
 
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.preference.PreferenceManager
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,12 +32,34 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
 import androidx.compose.ui.unit.dp
+import java.util.prefs.Preferences
+
+object Globals {
+	var backendAddress: String = "http://192.168.1.110:8000"
+}
 
 object FavoriteControl {
 
 	val favorites = mutableStateMapOf<Int, Service>()
 	fun addFavorite(service: Service)  = favorites.put(service.id, service)
 
+	fun commitStore(store: SharedPreferences) {
+		var favs = mutableSetOf<String>()
+		for (fav in favorites) {
+			favs = favs.plus(fav.value.id.toString()).toMutableSet()
+		}
+		Log.i("FavoriteControl", "saving: " + favs.toString())
+		store.edit().putStringSet("br.univali.eng2.santissimo.unimaps_compose.fav", favs).commit()
+	}
+
+	fun loadStore(store: SharedPreferences) {
+		val isfv = store.getStringSet("br.univali.eng2.santissimo.unimaps_compose.fav", mutableSetOf<String>())
+			?.map { it.toInt() }!!
+		Log.i("FavoriteControl", "loading: " + isfv.toString())
+		for (nf in isfv) {
+			addFavorite(ServiceControl.fetchServiceById(nf)!!)
+		}
+	}
 }
 
 object RecentsControl {
@@ -51,12 +78,28 @@ object RecentsControl {
 
 class MainActivity : ComponentActivity() {
 
+	var favoriteStore: SharedPreferences? = null
+
 	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+		this.favoriteStore = this.getSharedPreferences("br.univali.eng2.santissimo.unimaps_compose", Context.MODE_PRIVATE)
+
+		if (favoriteStore != null) {
+			Log.d("MainActivity", "Loading!")
+			FavoriteControl.loadStore(favoriteStore!!)
+		}
         setContent {
             MainUI(this)
         }
-    }
+	}
+
+	override fun onPause() {
+		super.onPause()
+		Log.d("MainActivity", "Saving!")
+		if (favoriteStore != null) {
+			FavoriteControl.commitStore(favoriteStore!!)
+		}
+	}
 }
 
 @Preview(showBackground = true)
@@ -125,7 +168,7 @@ fun MainUI(atv: MainActivity? = MainActivity()) {
 							for (fav in favorites) {
 								item {
 									Widgets.MugshotButton(
-										imageId = R.drawable.mate_deficon,
+										service = fav.value,
 										if (fav.value.status == Service.ServiceStatus.Open)
 											Color.Green
 										else
@@ -171,7 +214,7 @@ fun MainUI(atv: MainActivity? = MainActivity()) {
 				            for (rct in recents) {
 					            item {
 						            Widgets.MugshotButton(
-							            imageId = R.drawable.mate_deficon,
+							            service = rct,
 							            if (rct.status == Service.ServiceStatus.Open)
 								            Color.Green
 							            else

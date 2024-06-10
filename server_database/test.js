@@ -93,11 +93,13 @@ app.get("/service/:id", async(req, res) => {
     }
 })
 
-app.get("/service/:id/banner", async(req, res) => {
+app.get("/service/:id/banner.png", async(req, res) => {
+	console.log("Attempt banner " + req.params.id);
     try {
         const id = + req.params.id
         if (id != NaN) {
             const result = await db.query('SELECT banner FROM Servico WHERE id_servico = ' + id);
+            res.setHeader('content-type', 'image/png');
             res.send(result.rows[0].banner)
         }
     } catch (err){
@@ -106,11 +108,12 @@ app.get("/service/:id/banner", async(req, res) => {
     }
 })
 
-app.get("/service/:id/icon", async(req, res) => {
+app.get("/service/:id/icon.png", async(req, res) => {
     try {
         const id = + req.params.id
         if (id != NaN) {
             const result = await db.query('SELECT icone FROM Servico WHERE id_servico = ' + id);
+            res.setHeader('content-type', 'image/png');
             res.send(result.rows[0].icone)
         }
     } catch (err){
