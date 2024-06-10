@@ -40,10 +40,13 @@ object Globals {
 
 object FavoriteControl {
 
+	var hasLoaded = false
 	val favorites = mutableStateMapOf<Int, Service>()
 	fun addFavorite(service: Service)  = favorites.put(service.id, service)
 
-	fun commitStore(store: SharedPreferences) {
+	fun commitStore(store: SharedPreferences?) {
+		if (store == null)   return
+		if (!ServiceControl.isLoaded) return
 		var favs = mutableSetOf<String>()
 		for (fav in favorites) {
 			favs = favs.plus(fav.value.id.toString()).toMutableSet()
@@ -52,12 +55,13 @@ object FavoriteControl {
 		store.edit().putStringSet("br.univali.eng2.santissimo.unimaps_compose.fav", favs).commit()
 	}
 
-	fun loadStore(store: SharedPreferences) {
+	fun loadStore(store: SharedPreferences?) {
+		if (store == null) return
 		val isfv = store.getStringSet("br.univali.eng2.santissimo.unimaps_compose.fav", mutableSetOf<String>())
 			?.map { it.toInt() }!!
 		Log.i("FavoriteControl", "loading: " + isfv.toString())
 		for (nf in isfv) {
-			addFavorite(ServiceControl.fetchServiceById(nf)!!)
+			addFavorite(ServiceControl.fetchServiceById(nf) ?: continue)
 		}
 	}
 }
@@ -83,11 +87,7 @@ class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 		this.favoriteStore = this.getSharedPreferences("br.univali.eng2.santissimo.unimaps_compose", Context.MODE_PRIVATE)
-
-		if (favoriteStore != null) {
-			Log.d("MainActivity", "Loading!")
-			FavoriteControl.loadStore(favoriteStore!!)
-		}
+		FavoriteControl.loadStore(favoriteStore)
         setContent {
             MainUI(this)
         }
@@ -96,9 +96,7 @@ class MainActivity : ComponentActivity() {
 	override fun onPause() {
 		super.onPause()
 		Log.d("MainActivity", "Saving!")
-		if (favoriteStore != null) {
-			FavoriteControl.commitStore(favoriteStore!!)
-		}
+		FavoriteControl.commitStore(favoriteStore)
 	}
 }
 

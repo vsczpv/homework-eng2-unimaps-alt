@@ -1,8 +1,12 @@
 package br.univali.eng2.santissimo.unimaps_compose
 
 import android.os.AsyncTask
+import android.os.Handler
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.platform.LocalContext
 import org.json.JSONArray
 import org.json.JSONException
 import java.io.BufferedReader
@@ -11,6 +15,9 @@ import java.io.InputStreamReader
 import java.net.URL
 import java.net.URLConnection
 import java.time.LocalTime
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.*
 
 open class RESTLoadTask(val path: String) : AsyncTask<Void, Void, JSONArray>() {
 	override fun onPostExecute(result: JSONArray?) {
@@ -70,17 +77,33 @@ class CommentLoadTask(val commentId: Int) : RESTLoadTask("/comment/$commentId")
 
 object ServiceControl {
 
+	var isLoaded = false
+
 	var loadedServices: MutableMap<Int, EncapsulatedService> = HashMap()
 
 	init {
+		bootstrapNet()
+	}
 
-		val serviceIdsResult = ServiceIdsLoadTask().execute().get()!!
+	private fun bootstrapNet() {
+
+		val serviceIdsResult = ServiceIdsLoadTask().execute().get()
+
+		if (serviceIdsResult == null) {
+			Executors.newSingleThreadScheduledExecutor().schedule({
+				bootstrapNet()
+			}, 2, SECONDS)
+			return
+		}
+
+		this.isLoaded = true
 
 		val count = serviceIdsResult.length()
 
-		for (index in 0..< count) {
+		for (index in 0..<count) {
 			val objid = serviceIdsResult.getJSONObject(index).getInt("id_servico")
-			ServiceControl.loadedServices.put(objid,
+			ServiceControl.loadedServices.put(
+				objid,
 				EncapsulatedService(ServiceLoadTask(objid).execute(), objid)
 			)
 		}
@@ -88,7 +111,7 @@ object ServiceControl {
 	}
 
 	fun fetchServiceById(id: Int): Service? {
-		return loadedServices[id]!!.getService()
+		return loadedServices[id]?.getService()
 	}
 }
 
@@ -113,7 +136,7 @@ class EncapsulatedService {
 	fun getService(): Service? {
 		if (this.loadtask != null) {
 
-			val obj = this.loadtask!!.get().getJSONObject(0) ?: return null
+			val obj = this.loadtask?.get()?.getJSONObject(0) ?: return null
 
 			val commentsIdsResult = CommentIdsLoadTask(this.serviceId).execute().get()!!
 			val commentCount = commentsIdsResult.length()
@@ -234,6 +257,23 @@ class Service(
 				}
 
 				3 -> {
+					ServiceCatergory.Other
+				}
+				else -> {
+					ServiceCatergory.Other
+				}
+			}
+		}
+		@JvmStatic
+		fun catergoryFromString(str: String): ServiceCatergory {
+			return when (str) {
+				"Alimentação" -> {
+					ServiceCatergory.Food
+				}
+				"Sanitários" -> {
+					ServiceCatergory.Sanitary
+				}
+				"Outros" -> {
 					ServiceCatergory.Other
 				}
 				else -> {
