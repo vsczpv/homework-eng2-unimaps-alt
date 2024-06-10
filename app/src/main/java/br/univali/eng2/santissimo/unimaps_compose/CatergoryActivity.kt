@@ -5,25 +5,20 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,40 +39,59 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
-import java.time.LocalTime
 
 object CatergoryControl {
 
-	val catergories = mutableStateListOf<Service>() //: MutableList<Service> = ArrayList()
+	val catergories = mutableStateListOf<Pair<Service, Boolean>>()
 
 	init {
 		for (service in ServiceControl.loadedServices) {
-			catergories.add(service.value.getService()!!)
+			catergories.add(Pair(service.value.getService()!!, true))
 		}
 	}
-	fun getServices(): List<Service> = catergories
+	fun getServices(): List<Pair<Service,Boolean>> = catergories
 	fun getServiceCount() = catergories.size
+
+	fun search(term: String) {
+
+		Log.i("CatergoryActivity UNIMAPS", "Search Attempt: $term")
+		for (i in catergories.indices) {
+			val srv = catergories[i].first
+			if (srv.name.lowercase().contains(term.lowercase())) {
+				catergories[i] = Pair(srv, true)
+			} else {
+				catergories[i] = Pair(srv, false)
+			}
+		}
+
+	}
+
+	fun searchReset() {
+		Log.i("CatergoryActivity UNIMAPS", "Search Reset")
+		for (i in catergories.indices) {
+			catergories[i] = Pair(catergories[i].first, true)
+		}
+	}
 
 	fun sort(how: String) {
 		when (how) {
 			"Alfabética" -> {
-				catergories.sortBy { it.name }
+				catergories.sortBy { it.first.name }
 			}
 			"Horário" -> {
 				catergories.sortBy {
-					if (it.status == Service.ServiceStatus.Open) {
-						it.closedTime
+					if (it.first.status == Service.ServiceStatus.Open) {
+						it.first.closedTime
 					} else {
-						it.openTime
+						it.first.openTime
 					}
 				}
 			}
 			"Relevância" -> {
-				catergories.sortByDescending { it.rating }
+				catergories.sortByDescending { it.first.rating }
 			}
 			else -> {
 				throw Exception("Invalid Sort")
@@ -95,6 +110,21 @@ class CatergoryActivity : ComponentActivity() {
 			CatergoryUI(this, catergoryName!!)
 		}
 	}
+
+	override fun onPause() {
+		super.onPause()
+		CatergoryControl.searchReset()
+	}
+
+	override fun onStop() {
+		super.onStop()
+		CatergoryControl.searchReset()
+	}
+
+	override fun onNavigateUp(): Boolean {
+		CatergoryControl.searchReset()
+		return super.onNavigateUp()
+	}
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,6 +137,8 @@ fun CatergoryUI(atv: CatergoryActivity? = CatergoryActivity(), catergory_name: S
 	var filtrDrp by remember { mutableStateOf(false) }
 	var orderSel by remember { mutableStateOf("Alfabética")}
 	var filtrSel by remember { mutableStateOf("Nenhum")}
+
+	var searchQuery  by remember { mutableStateOf("") }
 
 	UNIMAPSComposeTheme {
 		// A surface container using the 'background' color from the theme
@@ -122,7 +154,21 @@ fun CatergoryUI(atv: CatergoryActivity? = CatergoryActivity(), catergory_name: S
 							titleContentColor = MaterialTheme.colorScheme.onPrimary
 						),
 						title = {
-							Text(catergory_name)
+							SearchBar(
+								trailingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+								query = searchQuery,
+								onQueryChange = { searchQuery = it },
+								onSearch = { CatergoryControl.search(searchQuery) },
+								active = false,
+								onActiveChange = {},
+								placeholder = { Text("Pesquise...") },
+								modifier = Modifier
+									.padding(bottom = 8.dp)
+									.height(56.dp)
+									.fillMaxSize()
+							) {
+								
+							}
 						},
 						navigationIcon = {
 							IconButton(onClick = {
@@ -269,19 +315,19 @@ fun CatergoryUI(atv: CatergoryActivity? = CatergoryActivity(), catergory_name: S
 					for (srv in services) {
 						val show = when (filtrSel) {
 							"Nenhum"  -> { true }
-							"Aberto"  -> { srv.status == Service.ServiceStatus.Open }
-							"Fechado" -> { srv.status == Service.ServiceStatus.Closed }
+							"Aberto"  -> { srv.first.status == Service.ServiceStatus.Open }
+							"Fechado" -> { srv.first.status == Service.ServiceStatus.Closed }
 							else -> {
 								throw Exception("Invalid Filter")
 							}
 						}
-						if (show && srv.catergory == Service.catergoryFromString(catergory_name))
+						if (show && srv.first.catergory == Service.catergoryFromString(catergory_name) && srv.second)
 						{
 							item {
-								Widgets.ServiceCardButton(service = srv) {
+								Widgets.ServiceCardButton(service = srv.first) {
 									val navi =
 										Intent(atv!!.baseContext, ServiceActivity::class.java)
-									navi.putExtra("service", srv.id)
+									navi.putExtra("service", srv.first.id)
 									atv.startActivity(navi)
 								}
 							}

@@ -12,6 +12,10 @@ library = "1.4.0"
 retrofit = "2.11.0"
 converterGson = "2.11.0"
 coilCompose = "2.6.0"
+appsearchLocalStorage = "1.1.0-alpha03"
+appsearchCompiler = "1.1.0-alpha03"
+appsearch = "1.1.0-alpha03"
+appsearchPlatformStorage = "1.1.0-alpha03"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,6 +35,10 @@ androidx-material3 = { group = "androidx.compose.material3", name = "material3" 
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "converterGson" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
+androidx-appsearch-local-storage = { group = "androidx.appsearch", name = "appsearch-local-storage", version.ref = "appsearchLocalStorage" }
+androidx-appsearch-compiler = { group = "androidx.appsearch", name = "appsearch-compiler", version.ref = "appsearchCompiler" }
+androidx-appsearch = { group = "androidx.appsearch", name = "appsearch", version.ref = "appsearch" }
+androidx-appsearch-platform-storage = { group = "androidx.appsearch", name = "appsearch-platform-storage", version.ref = "appsearchPlatformStorage" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
