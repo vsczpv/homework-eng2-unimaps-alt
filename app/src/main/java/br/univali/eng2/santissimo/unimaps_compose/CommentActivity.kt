@@ -38,8 +38,9 @@ import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
 class CommentActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
+		val service_id = intent.extras!!.getInt("service")
 		setContent {
-			CommentUI(this)
+			CommentUI(this, ServiceControl.fetchServiceById(service_id)!!)
 		}
 	}
 }

@@ -90,9 +90,7 @@ fun MainUI(atv: MainActivity? = MainActivity()) {
 	                    Widgets.MapCardButton(
 							background = R.drawable.map_placeholder,
 		                ) {
-							val id = favorites.size+1
-							FavoriteControl.addFavorite(CatergoryControl.getServices()[id])
-		                    Toast.makeText(atv!!.baseContext, "!!! $id", Toast.LENGTH_SHORT).show()
+		                    Toast.makeText(atv!!.baseContext, "To Be Implemented", Toast.LENGTH_SHORT).show()
 	                    }
 					}
 				}

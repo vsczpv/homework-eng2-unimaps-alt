@@ -6,7 +6,7 @@ const app = express();
 
 var jsonParser = bodyParser.json()
 
-const hostname = "127.0.0.1";
+const hostname = "0.0.0.0";
 const port = 8000;
 
 //
@@ -39,7 +39,7 @@ app.get("/service", async(req, res) => {
     }
 })
 
-app.get("/service/:id_service/item", async(req, res) => {
+app.get("/service/:id_service/items", async(req, res) => {
     try {
         const id_service = + req.params.id_service
         if (id_service != NaN) {
@@ -69,6 +69,7 @@ app.get("/service/:id_service/comments", async(req, res) => {
 app.get("/category/:id", async(req, res) => {
     try {
         const id = + req.params.id
+	    console.log(id)
         if (id != NaN) {
             const result = await db.query('SELECT nome FROM Categoria WHERE id_categoria = ' + id);
             res.send(result.rows)
@@ -83,7 +84,7 @@ app.get("/service/:id", async(req, res) => {
     try {
         const id = + req.params.id
         if (id != NaN) {
-            const result = await db.query('SELECT idf_categoria, idf_dono, nome, nome_dono, horario_aberto, horario_fechado, horario_pico, latitute, longitude, nota FROM Servico WHERE id_servico = ' + id);
+            const result = await db.query('SELECT idf_categoria, idf_dono, nome, nome_dono, horario_aberto, horario_fechado, horario_pico, latitute, longitude, nota, local, complemento, capacidade FROM Servico WHERE id_servico = ' + id);
             res.send(result.rows)
         }
     } catch (err){
@@ -131,7 +132,7 @@ app.get("/item/:id", async(req, res) => {
     }
 })
 
-app.get("/comments/:id", async(req, res) => {
+app.get("/comment/:id", async(req, res) => {
     try {
         const id = + req.params.id
         if (id != NaN) {
@@ -169,7 +170,7 @@ app.post("/service/:id_service/comments", jsonParser, async(req, res) => {
 })
 
 //update data
-app.put("/comments/:id_comments", jsonParser, async(req, res) => {
+app.put("/comment/:id_comments", jsonParser, async(req, res) => {
     try {
         const id = + req.params.id_comments;
         if (id == NaN || req.body == null) {
@@ -193,7 +194,7 @@ app.put("/comments/:id_comments", jsonParser, async(req, res) => {
 })
 
 //delete data
-app.delete("/comments/:id_comments", jsonParser, async(req, res) => {
+app.delete("/comment/:id_comments", jsonParser, async(req, res) => {
     try {
         const id = + req.params.id_comments;
         if (id == NaN) {

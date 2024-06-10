@@ -72,7 +72,8 @@ class ServiceActivity : ComponentActivity() {
 fun serviceCatergoryName(type: Service.ServiceCatergory): String {
 	return when (type) {
 		Service.ServiceCatergory.Food -> "Alimentação"
-		else -> "Inválido"
+		Service.ServiceCatergory.Sanitary -> "Sanitários"
+		Service.ServiceCatergory.Other -> "Outros"
 	}
 }
 

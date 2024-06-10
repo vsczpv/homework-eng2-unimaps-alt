@@ -28,6 +28,8 @@ CREATE TABLE Servico (
 	nota INTEGER,
 	icone BYTEA,
 	banner BYTEA,
+	local VARCHAR,
+	complemento VARCHAR,
 	
 	PRIMARY KEY (id_servico),
 	FOREIGN KEY (idf_categoria) REFERENCES Categoria(id_categoria)
