@@ -227,7 +227,7 @@ fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = Servi
 
 						OutlinedButton(
 							onClick = {
-								Toast.makeText(atv.baseContext, "TBI", Toast.LENGTH_SHORT).show()
+								Toast.makeText(atv.baseContext, "To Be Implemented", Toast.LENGTH_SHORT).show()
 							},
 							modifier = Modifier
 								.padding(top = 16.dp)
@@ -288,7 +288,9 @@ fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = Servi
 								.padding(start = 8.dp)
 						)
 
-						Widgets.MapCardButton(background = R.drawable.map_placeholder)
+						Widgets.MapCardButton(background = R.drawable.map_placeholder) {
+							Toast.makeText(atv.baseContext, "To Be Implemented", Toast.LENGTH_SHORT).show()
+						}
 
 						OutlinedButton(
 							onClick = {

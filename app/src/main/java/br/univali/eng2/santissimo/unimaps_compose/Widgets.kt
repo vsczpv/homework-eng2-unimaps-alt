@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -52,7 +53,7 @@ class Widgets {
 				modifier = Modifier
 					.fillMaxWidth()
 					.padding(8.dp)
-					.height(120.dp),
+					.defaultMinSize(minHeight = 120.dp),
 //					.clickable(onClick = onClick),
 				colors = CardDefaults.cardColors(
 					containerColor = MaterialTheme.colorScheme.onPrimary
@@ -63,12 +64,21 @@ class Widgets {
 				)
 			)
 			{
-				Text(
-					text = comment.body,
-					modifier = Modifier
-						.padding(16.dp),
-					overflow = TextOverflow.Ellipsis
-				)
+				Column()
+				{
+					Text(
+						text = comment.uname,
+						modifier = Modifier
+							.padding(start = 16.dp, top = 16.dp),
+						style = MaterialTheme.typography.titleMedium
+					)
+					Text(
+						text = comment.body,
+						modifier = Modifier
+							.padding(start = 16.dp, bottom = 16.dp),
+						overflow = TextOverflow.Visible
+					)
+				}
 			}
 		}
 

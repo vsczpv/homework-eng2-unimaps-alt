@@ -12,18 +12,24 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +42,7 @@ import java.util.prefs.Preferences
 
 object Globals {
 	var backendAddress: String = "http://192.168.1.110:8000"
+	var loggedIn = mutableStateOf(true)
 }
 
 object FavoriteControl {
@@ -122,12 +129,30 @@ fun MainUI(atv: MainActivity? = MainActivity()) {
             ) {
 				item {
 					Column {
-						Text(
-							text     = "Mapa",
-							style    = MaterialTheme.typography.titleLarge,
+						Row(
+							horizontalArrangement = Arrangement.SpaceBetween,
+							verticalAlignment = Alignment.CenterVertically,
 							modifier = Modifier
-								.padding(16.dp),
+								.fillMaxWidth()
 						)
+						{
+							Text(
+								text = "Mapa",
+								style = MaterialTheme.typography.titleLarge,
+								modifier = Modifier
+									.padding(16.dp),
+							)
+							IconButton(
+								modifier = Modifier
+									.padding(end = 8.dp),
+								onClick = {
+									val navi = Intent(atv!!.baseContext, ConfigActivity::class.java)
+									atv.startActivity(navi)
+								}
+							) {
+								Icon(Icons.Default.Settings, contentDescription = "Settings")
+							}
+						}
 	                    Widgets.MapCardButton(
 							background = R.drawable.map_placeholder,
 		                ) {

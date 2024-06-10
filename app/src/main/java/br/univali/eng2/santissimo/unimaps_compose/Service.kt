@@ -9,15 +9,124 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.platform.LocalContext
 import org.json.JSONArray
 import org.json.JSONException
+import org.json.JSONObject
 import java.io.BufferedReader
+import java.io.DataOutputStream
 import java.io.IOException
 import java.io.InputStreamReader
+import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLConnection
 import java.time.LocalTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeUnit.*
+
+open class RESTStoreTask(val path: String, val body: JSONObject) : AsyncTask<Void, Void, String>() {
+	override fun onPostExecute(result: String?) {
+		super.onPostExecute(result)
+		try {
+			Log.i("RESTStoreTask", "Data Stored. $result")
+		}
+		catch (e: JSONException) {
+			Log.e("RestStoreTask", "Data Not Stored", e)
+		}
+	}
+
+	override fun doInBackground(vararg params: Void?): String {
+		var result: String = ""
+
+		val real_path = Globals.backendAddress + this.path
+		var urlConn: HttpURLConnection? = null
+
+		Log.i("UNIMAPS RESSToreTask", "About to store $body")
+
+		try {
+			val url = URL(real_path)
+			urlConn = url.openConnection() as HttpURLConnection
+			urlConn.requestMethod = "POST"
+			urlConn.doOutput = true
+
+			val wr = DataOutputStream(urlConn.outputStream)
+			wr.writeBytes("$body")
+			wr.flush()
+			wr.close()
+
+			val ins  = urlConn.inputStream
+			val insr = InputStreamReader(ins)
+
+			var isd = insr.read()
+
+			while (isd != -1) {
+				val current = isd as Character
+				isd = insr.read()
+				result += current
+			}
+		} catch (e: Exception) {
+			e.printStackTrace()
+		} finally {
+			if (urlConn != null) {
+				urlConn.disconnect()
+			}
+		}
+		return result
+	}
+}
+
+open class RESTPutTask(val path: String, val body: JSONObject) : AsyncTask<Void, Void, String>() {
+	override fun onPostExecute(result: String?) {
+		super.onPostExecute(result)
+		try {
+			Log.i("RESTStoreTask", "Data Stored. $result")
+		}
+		catch (e: JSONException) {
+			Log.e("RestStoreTask", "Data Not Stored", e)
+		}
+	}
+
+	override fun doInBackground(vararg params: Void?): String {
+		var result: String = ""
+
+		val real_path = Globals.backendAddress + this.path
+		var urlConn: HttpURLConnection? = null
+
+		Log.i("UNIMAPS RESSToreTask", "About to store $body")
+
+		try {
+			val url = URL(real_path)
+			urlConn = url.openConnection() as HttpURLConnection
+			urlConn.requestMethod = "PUT"
+			urlConn.doOutput = true
+
+			val wr = DataOutputStream(urlConn.outputStream)
+			wr.writeBytes("$body")
+			wr.flush()
+			wr.close()
+
+			val ins  = urlConn.inputStream
+			val insr = InputStreamReader(ins)
+
+			var isd = insr.read()
+
+			while (isd != -1) {
+				val current = isd as Character
+				isd = insr.read()
+				result += current
+			}
+		} catch (e: Exception) {
+			e.printStackTrace()
+		} finally {
+			if (urlConn != null) {
+				urlConn.disconnect()
+			}
+		}
+		return result
+	}
+}
+
+//class CommentIdsLoadTask(val serviceId: Int) : RESTLoadTask("/service/$serviceId/comments")
+class CommentStoreTask(serviceId: Int, body: JSONObject) : RESTStoreTask("/service/$serviceId/comments", body)
+class CommentPutTask(commentId: Int, body: JSONObject) : RESTPutTask("/comment/$commentId", body)
 
 open class RESTLoadTask(val path: String) : AsyncTask<Void, Void, JSONArray>() {
 	override fun onPostExecute(result: JSONArray?) {
@@ -193,7 +302,7 @@ class Service(
 ) {
 
 	class CommentControl(val parent: Service) {
-		class Comment(val body: String, val uname: String, val rating: Int, val uid: Int)
+		class Comment(var body: String, val uname: String, val rating: Int, val uid: Int, /* val id: Int */)
 
 		class EncapsulatedComment {
 
@@ -218,7 +327,8 @@ class Service(
 						body   = obj.getString("conteudo"),
 						uname  = obj.getString("nome"),
 						rating = obj.getInt("avaliacao"),
-						uid    = obj.getInt("idf_usuario")
+						uid    = obj.getInt("idf_usuario"),
+//						id     = obj.getInt("id_comentario")
 					)
 					this.loadtask = null
 				}

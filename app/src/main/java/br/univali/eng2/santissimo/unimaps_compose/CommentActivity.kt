@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
+import org.json.JSONObject
+import java.time.LocalTime
 
 class CommentActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,8 +58,11 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(showBackground = true)
 @Composable
-fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = ServiceControl.fetchServiceById(0)!!) {
-	val comments  = remember { service.comments.comments }
+fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Service(9001, "TestPlace", "C1", "101", LocalTime.parse("01:00:00"), LocalTime.parse("23:00:00"), LocalTime.parse("12:00:00"), Service.ServiceStatus.Open, Service.ServiceCatergory.Food, Service.ServiceType.Pizzaplace, 32, 10 , 0)) {
+	val comments  = remember {
+//		service.comments.comments.add(Service.CommentControl.EncapsulatedComment(Service.CommentControl.Comment("Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!v", "Wilson", 10, 7)));
+		service.comments.comments
+	}
 	val isEditing = remember { mutableStateOf(false) }
 	val text      = remember { mutableStateOf("") }
 	UNIMAPSComposeTheme {
@@ -102,17 +107,44 @@ fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Servi
 								)
 							}
 							FloatingActionButton(onClick = {
-								// TODO
-								comments.add(
-									Service.CommentControl.EncapsulatedComment(
-										Service.CommentControl.Comment(
-											body   = text.value,
-											uname  = "Você",
-											uid    = 9001,
-											rating = 10
+								var alreadyExists = false
+								for (cmt in comments) {
+									val c = cmt.getComment()!!
+									if (c.uid == 6) {
+										alreadyExists = true
+										break
+									}
+								}
+								if (!alreadyExists) {
+
+//									var commentJson = JSONObject()
+//									commentJson.put("idf_usuario", 6)
+//									commentJson.put("idf_servico", service.id)
+//									commentJson.put("conteudo", text.value)
+//									commentJson.put("avaliacao", 10)
+
+//									CommentStoreTask(service.id, commentJson).execute().get()
+
+									comments.add(
+										Service.CommentControl.EncapsulatedComment(
+											Service.CommentControl.Comment(
+												body = text.value,
+												uname = "Tester",
+												uid = 6,
+												rating = 10
+											)
 										)
 									)
-								)
+								} else {
+									for (cmt in comments) {
+										val c = cmt.getComment()!!
+										if (c.uid == 6) {
+											cmt.getComment()!!.body = text.value
+											break
+										}
+									}
+								}
+
 								text.value      = ""
 								isEditing.value = false
 							},
@@ -127,9 +159,16 @@ fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Servi
 						}
 					} else {
 						FloatingActionButton(onClick = {
-							if (comments.size == 10) {
-								Toast.makeText(atv.baseContext, "Limite Alcançado", Toast.LENGTH_SHORT).show()
+							if (!Globals.loggedIn.value) {
+								Toast.makeText(atv.baseContext, "Por favor, efetue o login!", Toast.LENGTH_SHORT).show()
 								return@FloatingActionButton
+							}
+							for (cmt in comments) {
+								val c = cmt.getComment()!!
+								if (c.uid == 6) {
+									text.value = c.body
+									break
+								}
 							}
 							isEditing.value = true
 						}) {
