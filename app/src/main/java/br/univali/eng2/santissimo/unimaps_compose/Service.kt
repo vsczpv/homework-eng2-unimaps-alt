@@ -5,14 +5,12 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import org.json.JSONArray
 import org.json.JSONException
-import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.net.URL
 import java.net.URLConnection
 import java.time.LocalTime
-import kotlin.random.Random
 
 open class RESTLoadTask(val path: String) : AsyncTask<Void, Void, JSONArray>() {
 	override fun onPostExecute(result: JSONArray?) {
@@ -28,6 +26,8 @@ open class RESTLoadTask(val path: String) : AsyncTask<Void, Void, JSONArray>() {
 
 		val urlConn:   URLConnection
 		var bufReader: BufferedReader? = null
+
+		Log.i("UNIMAPS RESTLoadTask", "About to load $path")
 
 		try {
 			val url = URL(real_path)
@@ -66,6 +66,7 @@ class ServiceLoadTask(val id: Int) : RESTLoadTask("/service/$id")
 class ServiceIdsLoadTask() : RESTLoadTask("/service")
 
 class CommentIdsLoadTask(val serviceId: Int) : RESTLoadTask("/service/$serviceId/comments")
+class CommentLoadTask(val commentId: Int) : RESTLoadTask("/comment/$commentId")
 
 object ServiceControl {
 
@@ -111,7 +112,12 @@ class EncapsulatedService {
 
 	fun getService(): Service? {
 		if (this.loadtask != null) {
+
 			val obj = this.loadtask!!.get().getJSONObject(0) ?: return null
+
+			val commentsIdsResult = CommentIdsLoadTask(this.serviceId).execute().get()!!
+			val commentCount = commentsIdsResult.length()
+
 			this.service = Service(
 				id           = this.serviceId,
 				name         = obj.getString("nome"),
@@ -124,8 +130,18 @@ class EncapsulatedService {
 				type         = Service.ServiceType.Pizzaplace,
 				capacity     = obj.getInt("capacidade"),
 				rating       = obj.getInt("nota"),
-				commentCount = 0
+				commentCount = commentCount
 			)
+
+			Log.d("UNIMAPS: Service", "count: " + commentCount)
+
+			for (index in 0 ..< commentCount) {
+				val objid = commentsIdsResult.getJSONObject(index).getInt("id_comentario")
+				this.service!!.comments.comments.add(
+					Service.CommentControl.EncapsulatedComment(CommentLoadTask(objid).execute())
+				)
+			}
+
 			this.loadtask = null
 		}
 		return this.service
@@ -154,9 +170,41 @@ class Service(
 ) {
 
 	class CommentControl(val parent: Service) {
-		class Comment(val body: String)
+		class Comment(val body: String, val uname: String, val rating: Int, val uid: Int)
 
-		val comments = mutableStateListOf<Comment>()
+		class EncapsulatedComment {
+
+			private var comment: Comment? = null
+			private var loadtask: AsyncTask<Void, Void, JSONArray>? = null
+
+			constructor(comment: Comment) {
+				this.comment  = comment
+				this.loadtask = null
+			}
+
+			constructor(loadtask: AsyncTask<Void, Void, JSONArray>) {
+				this.loadtask = loadtask
+				this.comment  = null
+			}
+
+			fun getComment(): Comment? {
+
+				if (this.loadtask != null) {
+					val obj = this.loadtask!!.get().getJSONObject(0) ?: return null
+					this.comment = Comment(
+						body   = obj.getString("conteudo"),
+						uname  = obj.getString("nome"),
+						rating = obj.getInt("avaliacao"),
+						uid    = obj.getInt("idf_usuario")
+					)
+					this.loadtask = null
+				}
+
+				return this.comment
+			}
+		}
+
+		val comments = mutableStateListOf<EncapsulatedComment>()
 	}
 
 	var comments = CommentControl(this)

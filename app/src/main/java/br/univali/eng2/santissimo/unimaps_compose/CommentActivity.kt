@@ -102,7 +102,17 @@ fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Servi
 								)
 							}
 							FloatingActionButton(onClick = {
-								comments.add(Service.CommentControl.Comment(text.value))
+								// TODO
+								comments.add(
+									Service.CommentControl.EncapsulatedComment(
+										Service.CommentControl.Comment(
+											body   = text.value,
+											uname  = "Você",
+											uid    = 9001,
+											rating = 10
+										)
+									)
+								)
 								text.value      = ""
 								isEditing.value = false
 							},
@@ -152,7 +162,7 @@ fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Servi
 					) {
 						for (comm in comments) {
 							item {
-								Widgets.CommentCard(comment = comm)
+								Widgets.CommentCard(comment = comm.getComment()!!)
 							}
 						}
 					}
