@@ -43,6 +43,7 @@ import java.util.prefs.Preferences
 object Globals {
 	var backendAddress: String = "http://192.168.1.110:8000"
 	var loggedIn = mutableStateOf(true)
+	val userId = 6
 }
 
 object FavoriteControl {

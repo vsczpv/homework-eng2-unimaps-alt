@@ -11,9 +11,13 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.io.DataOutputStream
 import java.io.IOException
+import java.io.InputStream
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
+import java.lang.StringBuilder
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLConnection
@@ -39,35 +43,45 @@ open class RESTStoreTask(val path: String, val body: JSONObject) : AsyncTask<Voi
 		val real_path = Globals.backendAddress + this.path
 		var urlConn: HttpURLConnection? = null
 
+		var ins: InputStream? = null
+
 		Log.i("UNIMAPS RESSToreTask", "About to store $body")
 
 		try {
 			val url = URL(real_path)
 			urlConn = url.openConnection() as HttpURLConnection
 			urlConn.requestMethod = "POST"
+			urlConn.setRequestProperty("Content-Type", "application/json")
 			urlConn.doOutput = true
+			urlConn.connect()
 
-			val wr = DataOutputStream(urlConn.outputStream)
-			wr.writeBytes("$body")
+			val wr = BufferedWriter(OutputStreamWriter(urlConn.outputStream))
+			wr.write(body.toString())
 			wr.flush()
 			wr.close()
 
-			val ins  = urlConn.inputStream
-			val insr = InputStreamReader(ins)
-
-			var isd = insr.read()
-
-			while (isd != -1) {
-				val current = isd as Character
-				isd = insr.read()
-				result += current
+			ins = if (urlConn.responseCode == HttpURLConnection.HTTP_OK) {
+				urlConn.inputStream
+			} else {
+				urlConn.errorStream
 			}
+
+			val reader = BufferedReader(InputStreamReader(ins))
+			val sb = StringBuilder()
+			var line: String? = reader.readLine()
+
+			while (line != null)
+			{
+				sb.append(line + "\n")
+				line = reader.readLine()
+			}
+
+			ins.close()
+			result = sb.toString()
 		} catch (e: Exception) {
 			e.printStackTrace()
 		} finally {
-			if (urlConn != null) {
-				urlConn.disconnect()
-			}
+			urlConn?.disconnect()
 		}
 		return result
 	}
@@ -90,41 +104,50 @@ open class RESTPutTask(val path: String, val body: JSONObject) : AsyncTask<Void,
 		val real_path = Globals.backendAddress + this.path
 		var urlConn: HttpURLConnection? = null
 
-		Log.i("UNIMAPS RESSToreTask", "About to store $body")
+		var ins: InputStream? = null
+
+		Log.i("UNIMAPS RESTPutTask", "About to put $body")
 
 		try {
 			val url = URL(real_path)
 			urlConn = url.openConnection() as HttpURLConnection
 			urlConn.requestMethod = "PUT"
+			urlConn.setRequestProperty("Content-Type", "application/json")
 			urlConn.doOutput = true
+			urlConn.connect()
 
-			val wr = DataOutputStream(urlConn.outputStream)
-			wr.writeBytes("$body")
+			val wr = BufferedWriter(OutputStreamWriter(urlConn.outputStream))
+			wr.write(body.toString())
 			wr.flush()
 			wr.close()
 
-			val ins  = urlConn.inputStream
-			val insr = InputStreamReader(ins)
-
-			var isd = insr.read()
-
-			while (isd != -1) {
-				val current = isd as Character
-				isd = insr.read()
-				result += current
+			ins = if (urlConn.responseCode == HttpURLConnection.HTTP_OK) {
+				urlConn.inputStream
+			} else {
+				urlConn.errorStream
 			}
+
+			val reader = BufferedReader(InputStreamReader(ins))
+			val sb = StringBuilder()
+			var line: String? = reader.readLine()
+
+			while (line != null)
+			{
+				sb.append(line + "\n")
+				line = reader.readLine()
+			}
+
+			ins.close()
+			result = sb.toString()
 		} catch (e: Exception) {
 			e.printStackTrace()
 		} finally {
-			if (urlConn != null) {
-				urlConn.disconnect()
-			}
+			urlConn?.disconnect()
 		}
 		return result
 	}
 }
 
-//class CommentIdsLoadTask(val serviceId: Int) : RESTLoadTask("/service/$serviceId/comments")
 class CommentStoreTask(serviceId: Int, body: JSONObject) : RESTStoreTask("/service/$serviceId/comments", body)
 class CommentPutTask(commentId: Int, body: JSONObject) : RESTPutTask("/comment/$commentId", body)
 
@@ -259,7 +282,7 @@ class EncapsulatedService {
 				closedTime   = LocalTime.parse(obj.getString("horario_fechado")),
 				peakTime     = LocalTime.parse(obj.getString("horario_pico")),
 				catergory    = Service.catergoryFromInt(obj.getInt("idf_categoria")),
-				type         = Service.ServiceType.Pizzaplace,
+				type         = Service.typeFromInt(obj.getInt("tipo")),
 				capacity     = obj.getInt("capacidade"),
 				rating       = obj.getInt("nota"),
 				commentCount = commentCount
@@ -297,12 +320,26 @@ class Service(
 	val catergory: ServiceCatergory,
 	val type: ServiceType,
 	val capacity: Int,
-	val rating: Int,
-	val commentCount: Int
+	var rating: Int,
+	var commentCount: Int
 ) {
 
 	class CommentControl(val parent: Service) {
-		class Comment(var body: String, val uname: String, val rating: Int, val uid: Int, /* val id: Int */)
+		class Comment(var body: String, val uname: String, val rating: Int, val uid: Int, val id: Int)
+
+		fun reset() {
+			this.comments.clear()
+			val commentsIdsResult = CommentIdsLoadTask(parent.id).execute().get()!!
+
+			parent.commentCount = commentsIdsResult.length()
+
+			for (index in 0 ..< parent.commentCount) {
+				val objid = commentsIdsResult.getJSONObject(index).getInt("id_comentario")
+				comments.add(
+					EncapsulatedComment(CommentLoadTask(objid).execute())
+				)
+			}
+		}
 
 		class EncapsulatedComment {
 
@@ -328,7 +365,7 @@ class Service(
 						uname  = obj.getString("nome"),
 						rating = obj.getInt("avaliacao"),
 						uid    = obj.getInt("idf_usuario"),
-//						id     = obj.getInt("id_comentario")
+						id     = obj.getInt("id_comentario")
 					)
 					this.loadtask = null
 				}
@@ -374,6 +411,23 @@ class Service(
 				}
 			}
 		}
+
+		@JvmStatic
+		fun typeFromInt(which: Int): ServiceType {
+			return when (which) {
+				1 -> { ServiceType.Pizzaplace }
+				2 -> { ServiceType.Cafeteria }
+				3 -> { ServiceType.Restaurant }
+				4 -> { ServiceType.Juicestand }
+				5 -> { ServiceType.Snackbar }
+				6 -> { ServiceType.Bathroom }
+				7 -> { ServiceType.Drugstore }
+				8 -> { ServiceType.Market }
+				9 -> { ServiceType.Stationery }
+				else -> { ServiceType.Other }
+			}
+		}
+
 		@JvmStatic
 		fun catergoryFromString(str: String): ServiceCatergory {
 			return when (str) {
@@ -394,7 +448,16 @@ class Service(
 	}
 	enum class ServiceType
 	{
-		Pizzaplace
+		Pizzaplace,
+		Cafeteria,
+		Restaurant,
+		Juicestand,
+		Snackbar,
+		Bathroom,
+		Drugstore,
+		Market,
+		Stationery,
+		Other
 	}
 
 }

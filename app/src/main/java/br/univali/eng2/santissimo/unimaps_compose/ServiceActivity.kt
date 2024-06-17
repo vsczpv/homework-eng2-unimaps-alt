@@ -86,6 +86,15 @@ fun serviceCatergoryName(type: Service.ServiceCatergory): String {
 fun serviceTypeToName(type: Service.ServiceType): String {
 	return when (type) {
 		Service.ServiceType.Pizzaplace -> "Pizzaria"
+		Service.ServiceType.Cafeteria -> "Cafeteria"
+		Service.ServiceType.Restaurant -> "Restaurante"
+		Service.ServiceType.Juicestand -> "Estande de Suco"
+		Service.ServiceType.Snackbar -> "Lanchonete"
+		Service.ServiceType.Bathroom -> "Banheiro"
+		Service.ServiceType.Drugstore -> "Farmácia"
+		Service.ServiceType.Market -> "Mercado"
+		Service.ServiceType.Stationery -> "Papelaria"
+		Service.ServiceType.Other -> "Outro"
 	}
 }
 
@@ -97,9 +106,12 @@ fun serviceItineraryToString(service: Service): String {
 @Preview(showBackground = true)
 @Composable
 fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = ServiceControl.fetchServiceById(0)!!) {
+
 	val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 	val favorites = remember { FavoriteControl.favorites }
 	val hasBeenVisited = remember { mutableStateOf(false) }
+
+//	val rtg = remember { service.rating }
 
 	if (!hasBeenVisited.value) {
 		RecentsControl.addRecent(service)

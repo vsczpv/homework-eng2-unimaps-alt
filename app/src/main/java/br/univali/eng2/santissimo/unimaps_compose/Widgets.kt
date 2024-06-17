@@ -1,5 +1,6 @@
 package br.univali.eng2.santissimo.unimaps_compose
 
+import android.widget.RatingBar
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -39,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 
@@ -66,12 +70,31 @@ class Widgets {
 			{
 				Column()
 				{
-					Text(
-						text = comment.uname,
+					Row(
+						horizontalArrangement = Arrangement.SpaceBetween,
 						modifier = Modifier
-							.padding(start = 16.dp, top = 16.dp),
-						style = MaterialTheme.typography.titleMedium
-					)
+							.fillMaxWidth()
+					) {
+						Text(
+							text = comment.uname,
+							modifier = Modifier
+								.padding(start = 16.dp, top = 16.dp),
+							style = MaterialTheme.typography.titleMedium
+						)
+						AndroidView(
+							modifier = Modifier
+								.width(240.dp)
+								.scale(0.6f)
+								.offset(x = 60.dp),
+							factory = { context ->
+								RatingBar(context).apply {
+									this.numStars = 5
+									this.rating = (comment.rating.toFloat() / 10f) * 5f
+									this.setIsIndicator(true)
+								}
+							}
+						)
+					}
 					Text(
 						text = comment.body,
 						modifier = Modifier

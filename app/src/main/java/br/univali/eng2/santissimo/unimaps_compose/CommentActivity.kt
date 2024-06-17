@@ -2,12 +2,19 @@ package br.univali.eng2.santissimo.unimaps_compose
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.RatingBar
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -28,11 +35,17 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import br.univali.eng2.santissimo.unimaps_compose.ui.theme.UNIMAPSComposeTheme
 import org.json.JSONObject
 import java.time.LocalTime
@@ -59,12 +72,15 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Service(9001, "TestPlace", "C1", "101", LocalTime.parse("01:00:00"), LocalTime.parse("23:00:00"), LocalTime.parse("12:00:00"), Service.ServiceStatus.Open, Service.ServiceCatergory.Food, Service.ServiceType.Pizzaplace, 32, 10 , 0)) {
+
 	val comments  = remember {
-//		service.comments.comments.add(Service.CommentControl.EncapsulatedComment(Service.CommentControl.Comment("Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!v", "Wilson", 10, 7)));
+//		service.comments.comments.add(Service.CommentControl.EncapsulatedComment(Service.CommentControl.Comment("Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!Hello!v", "Wilson", 10, 7, 9001)));
 		service.comments.comments
 	}
 	val isEditing = remember { mutableStateOf(false) }
 	val text      = remember { mutableStateOf("") }
+	var rat       by remember { mutableFloatStateOf(5.0f) }
+
 	UNIMAPSComposeTheme {
 		Surface(
 			modifier = Modifier.fillMaxSize(),
@@ -108,42 +124,42 @@ fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Servi
 							}
 							FloatingActionButton(onClick = {
 								var alreadyExists = false
+								var which: Service.CommentControl.Comment? = null
 								for (cmt in comments) {
 									val c = cmt.getComment()!!
 									if (c.uid == 6) {
 										alreadyExists = true
+										which = c
 										break
 									}
 								}
 								if (!alreadyExists) {
 
-//									var commentJson = JSONObject()
-//									commentJson.put("idf_usuario", 6)
-//									commentJson.put("idf_servico", service.id)
-//									commentJson.put("conteudo", text.value)
-//									commentJson.put("avaliacao", 10)
+									val commentJson = JSONObject()
+									commentJson.put("idf_usuario", Globals.userId)
+									commentJson.put("idf_servico", service.id)
+									commentJson.put("conteudo", text.value)
+									commentJson.put("avaliacao", (rat * 2).toInt())
 
-//									CommentStoreTask(service.id, commentJson).execute().get()
+									CommentStoreTask(service.id, commentJson).execute().get()
 
-									comments.add(
-										Service.CommentControl.EncapsulatedComment(
-											Service.CommentControl.Comment(
-												body = text.value,
-												uname = "Tester",
-												uid = 6,
-												rating = 10
-											)
-										)
-									)
+									service.comments.reset()
+
 								} else {
-									for (cmt in comments) {
-										val c = cmt.getComment()!!
-										if (c.uid == 6) {
-											cmt.getComment()!!.body = text.value
-											break
-										}
+
+									val commentJson = JSONObject().apply {
+										put("conteudo", text.value)
+										put("avaliacao", (rat * 2).toInt())
 									}
+
+									CommentPutTask(which!!.id, commentJson).execute().get()
+
+									service.comments.reset()
 								}
+
+								val serv = ServiceLoadTask(service.id).execute().get().getJSONObject(0)
+								service.rating       = (serv.getDouble("nota") * 2).toInt()
+								service.commentCount = service.comments.comments.count()
 
 								text.value      = ""
 								isEditing.value = false
@@ -165,8 +181,9 @@ fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Servi
 							}
 							for (cmt in comments) {
 								val c = cmt.getComment()!!
-								if (c.uid == 6) {
+								if (c.uid == Globals.userId) {
 									text.value = c.body
+									rat = c.rating.toFloat() / 2.0f
 									break
 								}
 							}
@@ -185,6 +202,34 @@ fun CommentUI(atv: CommentActivity = CommentActivity(), service: Service = Servi
 					Column (
 						modifier = Modifier.padding(innerPadding)
 					) {
+						Row(
+							modifier = Modifier
+								.fillMaxWidth(),
+							horizontalArrangement = Arrangement.SpaceBetween,
+							verticalAlignment = Alignment.CenterVertically
+						) {
+							Text(
+								text = "Avaliação:",
+								style = MaterialTheme.typography.titleMedium,
+								modifier = Modifier
+									.padding(start = 16.dp)
+							)
+							AndroidView(
+								modifier = Modifier
+									.width(240.dp)
+									.scale(0.8f)
+									.offset(x = 10.dp),
+								factory = { context ->
+									RatingBar(context).apply {
+										this.numStars = 5
+										this.rating   = rat
+										this.setOnRatingBarChangeListener { ratingBar, rating, fromUser ->
+											rat = rating
+										}
+									}
+								}
+							)
+						}
 						TextField(
 							value = text.value,
 							onValueChange = { text.value = it },

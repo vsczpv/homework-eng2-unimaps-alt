@@ -30,6 +30,7 @@ app.get("/category", async(req, res) => {
 })
 
 app.get("/service", async(req, res) => {
+    console.log("[GET] /service");
     try {
         const result = await db.query('SELECT id_servico FROM Servico');
         res.send(result.rows)
@@ -40,6 +41,7 @@ app.get("/service", async(req, res) => {
 })
 
 app.get("/service/:id_service/items", async(req, res) => {
+    console.log("[GET] /service/" + req.params.id_service + "/items")
     try {
         const id_service = + req.params.id_service
         if (id_service != NaN) {
@@ -53,6 +55,7 @@ app.get("/service/:id_service/items", async(req, res) => {
 })
 
 app.get("/service/:id_service/comments", async(req, res) => {
+    console.log("[GET] /service/" + req.params.id_service + "/comments");
     try {
         const id_service = + req.params.id_service
         if (id_service != NaN) {
@@ -81,10 +84,11 @@ app.get("/category/:id", async(req, res) => {
 })
 
 app.get("/service/:id", async(req, res) => {
+    console.log("[GET] /service/" + req.params.id)
     try {
         const id = + req.params.id
         if (id != NaN) {
-            const result = await db.query('SELECT idf_categoria, idf_dono, nome, nome_dono, horario_aberto, horario_fechado, horario_pico, latitute, longitude, nota, local, complemento, capacidade FROM Servico WHERE id_servico = ' + id);
+            const result = await db.query('SELECT idf_categoria, idf_dono, nome, nome_dono, horario_aberto, horario_fechado, horario_pico, latitute, longitude, nota, local, complemento, capacidade, Tipo FROM Servico WHERE id_servico = ' + id);
             res.send(result.rows)
         }
     } catch (err){
@@ -94,7 +98,7 @@ app.get("/service/:id", async(req, res) => {
 })
 
 app.get("/service/:id/banner.png", async(req, res) => {
-	console.log("Attempt banner " + req.params.id);
+    console.log("[GET] /service/" + req.params.id + "/banner.png");
     try {
         const id = + req.params.id
         if (id != NaN) {
@@ -109,6 +113,7 @@ app.get("/service/:id/banner.png", async(req, res) => {
 })
 
 app.get("/service/:id/icon.png", async(req, res) => {
+    console.log("[GET] /service/" + req.params.id + "/icon.png");
     try {
         const id = + req.params.id
         if (id != NaN) {
@@ -136,6 +141,7 @@ app.get("/item/:id", async(req, res) => {
 })
 
 app.get("/comment/:id", async(req, res) => {
+    console.log("[GET] /comment/" + req.params.id)
     try {
         const id = + req.params.id
         if (id != NaN) {
@@ -150,20 +156,24 @@ app.get("/comment/:id", async(req, res) => {
 
 //post data
 app.post("/service/:id_service/comments", jsonParser, async(req, res) => {
+    console.log("[POST] /service/" + req.params.id_service + "/comments")
     try {
         const id = + req.params.id_service;
         if (req.body == null) {
             res.status(400).send('Bad Request');
             return
         }
-        console.log(req.body);
         const b = req.body;
-        if (b.idf_usuario == null || b.idf_servico == null || b.conteudo == null || b.avaliacao == null){
+        if (b.idf_usuario == null || b.conteudo == null || b.avaliacao == null){
             res.status(400).send('Bad Request');
             return
         }
-        const query = 'INSERT INTO Comentario(idf_usuario, idf_servico, conteudo, avaliacao) VALUES(' + b.idf_usuario + ',' + b.idf_servico + ',\'' + b.conteudo + '\',\'' + b.avaliacao + '\')'
+        const query = 'INSERT INTO Comentario(idf_usuario, idf_servico, conteudo, avaliacao) VALUES(' + b.idf_usuario + ',' + id + ',\'' + b.conteudo + '\',\'' + b.avaliacao + '\') returning id_comentario'
         const result = await db.query(query)
+
+        const query2 = `update Servico set nota=(select sum(avaliacao)/count(avaliacao) avg from Comentario where idf_servico = ${id_service}) * 2 where id_servico = ${id_service}`
+        const rest2 = await db.query(query2)
+
         res.status(200).send('Ok')
         
     } catch (err){
@@ -174,13 +184,14 @@ app.post("/service/:id_service/comments", jsonParser, async(req, res) => {
 
 //update data
 app.put("/comment/:id_comments", jsonParser, async(req, res) => {
+    console.log("[PUT] /comment/" + req.params.id_comments)
     try {
         const id = + req.params.id_comments;
         if (id == NaN || req.body == null) {
             res.status(400).send('Bad Request');
             return
         }
-        console.log(req.body);
+
         const b = req.body;
         if (b.conteudo == null || b.avaliacao == null){
             res.status(400).send('Bad Request');
@@ -188,6 +199,12 @@ app.put("/comment/:id_comments", jsonParser, async(req, res) => {
         }
         const query = 'UPDATE Comentario SET conteudo = \'' + b.conteudo + '\', avaliacao = \'' + b.avaliacao + '\' WHERE id_comentario = ' + id
         const result = await db.query(query)
+
+        const id_service = (await db.query(`select s.id_servico from Comentario c join Servico s on c.idf_servico = s.id_servico where c.id_comentario = ${id}`)).rows[0].id_servico
+
+        const query2 = `update Servico set nota=(select sum(avaliacao)/count(avaliacao) avg from Comentario where idf_servico = ${id_service}) where id_servico = ${id_service}`
+        const rest2 = await db.query(query2)
+
         res.status(200).send('Ok')
         
     } catch (err){

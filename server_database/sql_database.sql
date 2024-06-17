@@ -84,6 +84,21 @@ CREATE TABLE Comentario (
 		ON DELETE CASCADE
 );
 
+CREATE TABLE Catalogo (
+
+	id_item SERIAL,
+	idf_servico INTEGER,
+	nome VARCHAR,
+	preco DECIMAL,
+	icone BYTEA,
+
+	PRIMARY KEY(id_item),
+	FOREIGN KEY (idf_servico) REFERENCES Servico(id_servico)
+		ON UPDATE CASCADE
+		ON DELETE CASCADE
+
+);
+
 --INSERT INTO Categoria(nome) VALUES ('banana');
 
 CREATE USER default_user WITH PASSWORD '1234';
@@ -93,6 +108,7 @@ GRANT USAGE, SELECT ON SEQUENCE comentario_id_comentario_seq TO default_user;
 GRANT SELECT ON Item to default_user;
 GRANT SELECT ON Servico to default_user;
 GRANT SELECT ON Usuario to default_user;
+GRANT SELECT ON Catalogo to default_user;
 
 --REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM default_user
 --REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM default_user
