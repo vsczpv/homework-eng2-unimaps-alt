@@ -142,6 +142,7 @@ app.get("/service/:id/icon.png", async(req, res) => {
     }
 })
 
+/*
 app.get("/item/:id/icon.png", async(req, res) => {
     console.log("[GET] /item/" + req.params.id + "/icon.png")
     try {
@@ -156,6 +157,7 @@ app.get("/item/:id/icon.png", async(req, res) => {
         res.status(500).send('Internal Server Error');
     }
 })
+*/
 
 app.get("/item/:id", async(req, res) => {
     console.log("[GET] /item/" + req.params.id);
