@@ -207,6 +207,9 @@ class ServiceIdsLoadTask() : RESTLoadTask("/service")
 class CommentIdsLoadTask(val serviceId: Int) : RESTLoadTask("/service/$serviceId/comments")
 class CommentLoadTask(val commentId: Int) : RESTLoadTask("/comment/$commentId")
 
+class ItemIdsLoadTask(val serviceId: Int) : RESTLoadTask("/service/$serviceId/items")
+class ItemLoadTask(val itemId: Int) : RESTLoadTask("/item/$itemId")
+
 object ServiceControl {
 
 	var isLoaded = false
@@ -273,6 +276,9 @@ class EncapsulatedService {
 			val commentsIdsResult = CommentIdsLoadTask(this.serviceId).execute().get()!!
 			val commentCount = commentsIdsResult.length()
 
+			val itemIdsResult = ItemIdsLoadTask(this.serviceId).execute().get()!!
+			val itemCount = itemIdsResult.length()
+
 			this.service = Service(
 				id           = this.serviceId,
 				name         = obj.getString("nome"),
@@ -294,6 +300,13 @@ class EncapsulatedService {
 				val objid = commentsIdsResult.getJSONObject(index).getInt("id_comentario")
 				this.service!!.comments.comments.add(
 					Service.CommentControl.EncapsulatedComment(CommentLoadTask(objid).execute())
+				)
+			}
+
+			for (index in 0 ..< itemCount) {
+				val objid = itemIdsResult.getJSONObject(index).getInt("id_item")
+				this.service!!.items.items.add(
+					Service.ItemControl.EncapsulatedItem(ItemLoadTask(objid).execute())
 				)
 			}
 
@@ -323,6 +336,45 @@ class Service(
 	var rating: Int,
 	var commentCount: Int
 ) {
+
+	class ItemControl(val parent: Service) {
+		data class Item(val name: String, val type: String, val price: Double, val id: Int)
+		class EncapsulatedItem {
+
+			private var item: Item? = null
+			private var loadtask: AsyncTask<Void, Void, JSONArray>? = null
+
+			constructor(item: Item) {
+				this.item    = item
+				this.loadtask = null
+			}
+
+			constructor(loadtask: AsyncTask<Void, Void, JSONArray>) {
+				this.loadtask = loadtask
+				this.item     = null
+			}
+
+			fun getItem(): Item? {
+
+				if (this.loadtask != null) {
+					val obj = this.loadtask!!.get().getJSONObject(0) ?: return null
+					this.item = Item(
+						id = obj.getInt("id_item"),
+						name = obj.getString("nome"),
+						type = obj.getString("tipo"),
+						price = obj.getDouble("preco")
+					)
+					this.loadtask = null
+				}
+
+				return this.item
+			}
+		}
+
+		val items = mutableStateListOf<EncapsulatedItem>()
+	}
+
+	var items = ItemControl(this)
 
 	class CommentControl(val parent: Service) {
 		class Comment(var body: String, val uname: String, val rating: Int, val uid: Int, val id: Int)

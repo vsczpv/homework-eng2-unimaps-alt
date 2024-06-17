@@ -68,11 +68,26 @@ app.get("/service/:id_service/comments", async(req, res) => {
     }
 })
 
+/*
+app.get("/service/:id_service/catalog", async(req, res) => {
+    console.log("[GET] /service/" + req.params.id_service + "/catalog");
+    try {
+        const id_service = + req.params.id_service
+        if (id_service != NaN) {
+            const result = await db.query('SELECT id_item FROM Catalogo WHERE idf_servico = ' + id_service);
+            res.send(result.rows)
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error')
+    }
+})
+*/
+
 //get data
 app.get("/category/:id", async(req, res) => {
     try {
         const id = + req.params.id
-	    console.log(id)
         if (id != NaN) {
             const result = await db.query('SELECT nome FROM Categoria WHERE id_categoria = ' + id);
             res.send(result.rows)
@@ -127,7 +142,23 @@ app.get("/service/:id/icon.png", async(req, res) => {
     }
 })
 
+app.get("/item/:id/icon.png", async(req, res) => {
+    console.log("[GET] /item/" + req.params.id + "/icon.png")
+    try {
+        const id = + req.params.id
+        if (id != NaN) {
+            const result await db.query('SELECT icone from Item WHERE id_item = ' + id)
+            res.setHeader('content-type', 'image/png');
+            res.send(result.rows[0].icone)
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+})
+
 app.get("/item/:id", async(req, res) => {
+    console.log("[GET] /item/" + req.params.id);
     try {
         const id = + req.params.id
         if (id != NaN) {

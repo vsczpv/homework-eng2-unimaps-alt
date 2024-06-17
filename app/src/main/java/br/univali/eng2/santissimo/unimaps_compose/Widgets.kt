@@ -52,13 +52,58 @@ class Widgets {
 
 		@JvmStatic
 		@Composable
+		fun ItemCard(item: Service.ItemControl.Item, onClick: () -> Unit = {}) {
+			OutlinedCard(
+				modifier = Modifier
+					.fillMaxWidth()
+					.padding(8.dp)
+					.defaultMinSize(minHeight = 120.dp),
+				colors = CardDefaults.cardColors(
+					containerColor = MaterialTheme.colorScheme.onPrimary
+				),
+				border = BorderStroke(1.dp, Color.Black),
+				elevation = CardDefaults.cardElevation(
+					defaultElevation = 6.dp
+				)
+			)
+			{
+				Column()
+				{
+					Row(
+						horizontalArrangement = Arrangement.SpaceBetween,
+						modifier = Modifier
+							.fillMaxWidth()
+					) {
+						Text(
+							text = item.name,
+							modifier = Modifier
+								.padding(start = 16.dp, top = 16.dp),
+							style = MaterialTheme.typography.titleMedium
+						)
+						Text(
+							text = "R\$${String.format("%.2f", item.price)}",
+							modifier = Modifier
+								.padding(end = 16.dp, top = 16.dp)
+						)
+					}
+					Text(
+						text = item.type,
+						style = MaterialTheme.typography.titleSmall,
+						modifier = Modifier
+							.padding(start = 16.dp)
+					)
+				}
+			}
+		}
+
+		@JvmStatic
+		@Composable
 		fun CommentCard(comment: Service.CommentControl.Comment, onClick: () -> Unit = {}) {
 			OutlinedCard(
 				modifier = Modifier
 					.fillMaxWidth()
 					.padding(8.dp)
 					.defaultMinSize(minHeight = 120.dp),
-//					.clickable(onClick = onClick),
 				colors = CardDefaults.cardColors(
 					containerColor = MaterialTheme.colorScheme.onPrimary
 				),

@@ -239,7 +239,9 @@ fun ServiceUI(atv: ServiceActivity = ServiceActivity(), service: Service = Servi
 
 						OutlinedButton(
 							onClick = {
-								Toast.makeText(atv.baseContext, "To Be Implemented", Toast.LENGTH_SHORT).show()
+								val navi = Intent(atv.baseContext, CatalogActivity::class.java)
+								navi.putExtra("service", service.id)
+								atv.startActivity(navi)
 							},
 							modifier = Modifier
 								.padding(top = 16.dp)
